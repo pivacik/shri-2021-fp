@@ -37,7 +37,7 @@ import {
 } from "ramda";
 import { round, toNumber, toString } from "lodash";
 
-const api = new Api({ errorCountdown: 2 });
+const api = new Api();
 
 const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
   const lessThan10 = lt(__, 10);
