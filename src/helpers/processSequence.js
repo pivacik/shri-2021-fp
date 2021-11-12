@@ -37,15 +37,16 @@ import {
 } from "ramda";
 import { round, toNumber, toString } from "lodash";
 
-const api = new Api();
+const api = new Api({ errorCountdown: 2 });
 
 const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
   const lessThan10 = lt(__, 10);
   const greaterThan2 = gt(__, 2);
+  const greaterThanZero = gt(__, 0);
   const equalsMinus = equals("-");
   const hasLengthLessThan10 = compose(lessThan10, length);
   const hasLengthMoreThan2 = compose(greaterThan2, length);
-  const isNotNegative = compose(not, equalsMinus, head);
+  const isPositive = compose(greaterThanZero, parseFloat);
   const matchesNumberPattern = test(/^[0-9]+(\.[0-9]+)?$/);
   const handleValidationError = () => handleError("ValidationError");
   const handlePromiseError = (e) => handleError(e);
@@ -61,7 +62,7 @@ const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
   const isValidNumber = allPass([
     hasLengthMoreThan2,
     hasLengthLessThan10,
-    isNotNegative,
+    isPositive,
     matchesNumberPattern,
   ]);
 
@@ -86,6 +87,7 @@ const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
     getResult
   );
   const computeNumber = compose(
+    otherwise(handlePromiseError),
     andThen(computeBinary),
     changeBaseApi,
     setParams,
@@ -101,11 +103,7 @@ const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
     handleValidationError
   );
 
-  const app = compose(
-    otherwise(handlePromiseError),
-    validateNumber,
-    tap(writeLog)
-  );
+  const app = compose(validateNumber, tap(writeLog));
 
   app(value);
 };
